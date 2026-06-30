@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  
+  --color-background: #0f0f14;
+  --color-background-light: #1a1a24;
+  --color-background-card: #1e1e2a;
+  
+  --color-surface: #252536;
+  --color-surface-light: #2e2e42;
+  
+  --color-gold: #f5a623;
+  --color-gold-light: #ffc857;
+  --color-gold-glow: rgba(245, 166, 35, 0.3);
+  
+  --color-text-primary: #e8e6df;
+  --color-text-secondary: #9a9a9a;
+  --color-text-muted: #666666;
+  
+  --color-border: #2a2a3a;
+
+  --animate-pulse-ring: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Base styles for a premium app feel */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reusable glowing utility classes for that RPG feel */
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px var(--color-gold-glow);
+  }
+  
+  .box-glow {
+    box-shadow: 0 0 20px var(--color-gold-glow);
+  }
+  
+  .glass-card {
+    background: rgba(37, 37, 54, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
