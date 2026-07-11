@@ -2,13 +2,14 @@ import { ArrowRight, Map, Flame, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+  
   return (
     <main className="min-h-screen bg-background text-text-primary selection:bg-gold-glow">
       {/* Navbar */}
       <nav className="flex items-center justify-between p-6 max-w-6xl mx-auto">
         <div className="text-xl font-bold text-gold tracking-tight">Life Levels</div>
         <div className="flex gap-4">
-          <button className="text-sm font-medium hover:text-gold transition-colors">Log In</button>
+          <button className="text-sm font-medium hover:text-gold transition-colors"><Link href="/login">Log In</Link></button>
           <button className="text-sm font-bold bg-surface px-4 py-2 rounded-full border border-border hover:border-gold transition-all">Get App</button>
         </div>
       </nav>
@@ -30,9 +31,9 @@ export default function Home() {
             mapped beautifully.
           </span>
         </h1>
-        
+
         <p className="text-xl md:text-2xl text-text-secondary max-w-3xl mb-14 leading-relaxed">
-          A journaling app where every completed day becomes a glowing level on a map. <br/>
+          A journaling app where every completed day becomes a glowing level on a map. <br />
           Make your life feel like a game you're processing through.
         </p>
 
