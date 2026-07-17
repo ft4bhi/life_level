@@ -212,96 +212,15 @@ export function useWaypointGsap() {
         /* ============= PAGE LOAD INTRO ============= */
         if (!reduceMotion) {
           var tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-          tl.to("#topnav", { y: 0, opacity: 1, duration: 0.7 })
-            .to("#eyebrow", { opacity: 1, duration: 0.8 }, "-=.35")
-            .fromTo(".fab", { scale: 0 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, "-=.4");
+          tl.from("#topnav", { y: -100, opacity: 0, duration: 0.7 })
+            .to("#eyebrow", { opacity: 1, duration: 0.8 }, "-=.35");
         } else {
-          gsap.set(["#topnav", "#eyebrow"], { opacity: 1, y: 0 });
-          gsap.set(".fab", { scale: 1 });
+          gsap.set(["#eyebrow"], { opacity: 1, y: 0 });
         }
 
-        /* ============= NAV INTERACTIONS ============= */
-        var settingsBtn = document.getElementById("settingsBtn")!;
-        var settingsPanel = document.getElementById("settingsPanel")!;
-        function onSettingsBtnClick(e: MouseEvent) {
-          e.stopPropagation();
-          var open = settingsPanel.classList.toggle("open");
-          settingsBtn.setAttribute("aria-expanded", String(open));
-        }
-        settingsBtn.addEventListener("click", onSettingsBtnClick);
-        var toggleBtns = Array.from(settingsPanel.querySelectorAll<HTMLButtonElement>("[data-toggle]"));
-        function onToggleClick(this: HTMLButtonElement) {
-          this.classList.toggle("on");
-        }
-        toggleBtns.forEach(function (sw) {
-          sw.addEventListener("click", onToggleClick);
-        });
-        function onDocClick(e: MouseEvent) {
-          if (!settingsPanel.contains(e.target as Node) && e.target !== settingsBtn) {
-            settingsPanel.classList.remove("open");
-            settingsBtn.setAttribute("aria-expanded", "false");
-          }
-        }
-        document.addEventListener("click", onDocClick);
-
-        var isLoggedIn = true;
-        var authBtn = document.getElementById("authBtn")!;
-        var authBtnText = document.getElementById("authBtnText")!;
-        function onAuthClick() {
-          isLoggedIn = !isLoggedIn;
-          if (isLoggedIn) {
-            authBtnText.textContent = "Log out";
-            authBtn.classList.add("signin");
-            showToast("Welcome back, Wren.", "fa-circle-check");
-          } else {
-            authBtnText.textContent = "Sign in";
-            authBtn.classList.remove("signin");
-            showToast("Signed out. See you soon.", "fa-moon");
-          }
-        }
-        authBtn.addEventListener("click", onAuthClick);
-
-        /* ============= SEARCH ============= */
-        var searchInput = document.getElementById("searchInput") as HTMLInputElement;
-        var searchPill = document.getElementById("searchPill")!;
-        function onSearchFocus() {
-          searchPill.classList.add("expanded");
-        }
-        function onSearchBlur() {
-          searchPill.classList.remove("expanded");
-        }
-        function onSearchKeydown(e: KeyboardEvent) {
-          if (e.key !== "Enter") return;
-          var q = searchInput.value.trim().toLowerCase();
-          if (!q) return;
-          var idx = NODES.findIndex(function (n) {
-            return (
-              !n.today &&
-              ((n.title && n.title.toLowerCase().indexOf(q) !== -1) ||
-                (n.excerpt && n.excerpt.toLowerCase().indexOf(q) !== -1))
-            );
-          });
-          if (idx === -1) {
-            showToast('No quests found for "' + searchInput.value + '"', "fa-circle-xmark");
-            return;
-          }
-          var el = nodesContainer.querySelector('.level-node[data-idx="' + idx + '"]') as HTMLElement;
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el.classList.add("search-hit");
-          var badge = el.querySelector(".node-badge") as HTMLElement;
-          badge.style.boxShadow = "0 0 0 6px rgba(227,168,87,.35)";
-          setTimeout(function () {
-            badge.style.boxShadow = "";
-          }, 1600);
-        }
-        searchInput.addEventListener("focus", onSearchFocus);
-        searchInput.addEventListener("blur", onSearchBlur);
-        searchInput.addEventListener("keydown", onSearchKeydown);
-
-        /* ============= MODAL ============= */
+        /* ============= MODAL (read-only for past nodes) ============= */
         var overlay = document.getElementById("modalOverlay")!;
         var modalCard = document.getElementById("modalCard")!;
-        var selectedMood = "✨";
 
         function openReadModal(idx: number) {
           var n = NODES[idx];
@@ -311,50 +230,11 @@ export function useWaypointGsap() {
             '<button class="modal-close" id="closeModal"><i class="fa-solid fa-xmark"></i></button>' +
             "</div>" +
             '<p class="modal-body-text">' + n.body + "</p>";
-          openOverlay();
-        }
-
-        function openCreateModal() {
-          selectedMood = "✨";
-          var moods = ["✨", "🌱", "☕", "🏆", "🌧️", "💻", "🥾", "😅"];
-          modalCard.innerHTML =
-            '<div class="modal-top">' +
-            '<div><h3>Record a Quest</h3><div class="modal-meta">Today · New entry</div></div>' +
-            '<button class="modal-close" id="closeModal"><i class="fa-solid fa-xmark"></i></button>' +
-            "</div>" +
-            '<div class="field"><label>Title</label><input type="text" id="entryTitle" placeholder="Give today a name..." /></div>' +
-            '<div class="field"><label>excerpt</label><input type="text" id="entryExcerpt" placeholder="Give a highlight of today..." /></div>'
-            +
-            '<div class="field"><label>Mood</label><div class="mood-row" id="moodRow">' +
-            moods
-              .map(function (m) {
-                return '<button type="button" class="mood-opt' + (m === selectedMood ? " selected" : "") + '" data-mood="' + m + '">' + m + "</button>";
-              })
-              .join("") +
-            "</div></div>" +
-            "<div class=\"field\"><label>What happened?</label><textarea id=\"entryBody\" rows=\"4\" placeholder=\"Write it while it's fresh...\"></textarea></div>" +
-            '<button class="save-btn" id="saveEntry"><i class="fa-solid fa-feather"></i> Save entry</button>';
-          openOverlay();
-          modalCard.querySelectorAll<HTMLButtonElement>(".mood-opt").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              modalCard.querySelectorAll(".mood-opt").forEach(function (b) {
-                b.classList.remove("selected");
-              });
-              btn.classList.add("selected");
-              selectedMood = btn.dataset.mood || selectedMood;
-            });
-          });
-          document.getElementById("saveEntry")!.addEventListener("click", function () {
-            closeOverlay();
-            showToast("Quest recorded. Level up!", "fa-circle-check");
-          });
-        }
-
-        function openOverlay() {
           overlay.classList.add("open");
           document.getElementById("closeModal")!.addEventListener("click", closeOverlay);
           document.body.style.overflow = "hidden";
         }
+
         function closeOverlay() {
           overlay.classList.remove("open");
           document.body.style.overflow = "";
@@ -372,28 +252,15 @@ export function useWaypointGsap() {
           var btn = (e.target as HTMLElement).closest("[data-open]");
           if (!btn) return;
           var val = btn.getAttribute("data-open")!;
-          if (val === "today") openCreateModal();
-          else openReadModal(parseInt(val, 10));
+          if (val === "today") {
+            window.location.href = "/journal/new";
+          } else {
+            openReadModal(parseInt(val, 10));
+          }
         }
         nodesContainer.addEventListener("click", onNodesContainerClick);
 
-        var fabBtn = document.getElementById("fabBtn")!;
-        fabBtn.addEventListener("click", openCreateModal);
 
-        /* ============= TOAST ============= */
-        var toast = document.getElementById("toast")!;
-        var toastText = document.getElementById("toastText")!;
-        var toastIcon = toast.querySelector("i")!;
-        var toastTimer: any;
-        function showToast(msg: string, icon?: string) {
-          clearTimeout(toastTimer);
-          toastText.textContent = msg;
-          toastIcon.className = "fa-solid " + (icon || "fa-circle-check");
-          toast.classList.add("show");
-          toastTimer = setTimeout(function () {
-            toast.classList.remove("show");
-          }, 2600);
-        }
 
         /* ============= RESIZE ============= */
         var resizeTimer: any;
@@ -409,19 +276,9 @@ export function useWaypointGsap() {
         window.addEventListener("resize", onResize);
 
         cleanupFns.push(function () {
-          settingsBtn.removeEventListener("click", onSettingsBtnClick);
-          toggleBtns.forEach(function (sw) {
-            sw.removeEventListener("click", onToggleClick);
-          });
-          document.removeEventListener("click", onDocClick);
-          authBtn.removeEventListener("click", onAuthClick);
-          searchInput.removeEventListener("focus", onSearchFocus);
-          searchInput.removeEventListener("blur", onSearchBlur);
-          searchInput.removeEventListener("keydown", onSearchKeydown);
           overlay.removeEventListener("click", onOverlayClick);
           document.removeEventListener("keydown", onDocKeydown);
           nodesContainer.removeEventListener("click", onNodesContainerClick);
-          fabBtn.removeEventListener("click", openCreateModal);
           window.removeEventListener("resize", onResize);
           mainTrigger.kill();
           originTrigger.kill();

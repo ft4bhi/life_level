@@ -36,85 +36,6 @@ export default function WaypointPage() {
         <span id="zoneText">Meadow Trailhead</span>
       </div>
 
-      {/* NAV */}
-      <nav className="topnav" id="topnav">
-        <div className="brand">
-          <div className="mark">
-            <i className="fa-solid fa-compass"></i>
-          </div>
-          <div>
-            <h1>Waypoint</h1>
-            <span>YOUR STORY, MAPPED</span>
-          </div>
-        </div>
-        <div className="search-wrap">
-          <div className="search-pill" id="searchPill">
-            <i className="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="Search your quests..." autoComplete="off" />
-            <span className="hint">↵</span>
-          </div>
-        </div>
-        <div className="nav-right">
-          <div className="settings-wrap">
-            <button className="icon-btn" id="settingsBtn" aria-haspopup="true" aria-expanded="false" title="Settings">
-              <i className="fa-solid fa-gear"></i>
-            </button>
-            <div className="settings-panel" id="settingsPanel">
-              <h4>Preferences</h4>
-              <div className="toggle-row">
-                <span>Dark realm</span>
-                <button className="switch on" data-toggle></button>
-              </div>
-              <div className="toggle-row">
-                <span>Quest reminders</span>
-                <button className="switch on" data-toggle></button>
-              </div>
-              <div className="toggle-row">
-                <span>Sound effects</span>
-                <button className="switch" data-toggle></button>
-              </div>
-            </div>
-          </div>
-          <div className="profile-wrap" id="profileWrap" tabIndex={0}>
-            <button className="avatar-btn" aria-haspopup="true" title="Profile">
-              <div className="avatar-glyph">WA</div>
-            </button>
-            <div className="profile-card" id="profileCard">
-              <div className="profile-head">
-                <div className="avatar-lg">WA</div>
-                <div>
-                  <h3 id="profileName">Wren Ashcombe</h3>
-                  <p id="profileRank">LV.10 · WAYFARER</p>
-                </div>
-              </div>
-              <div className="xp-row">
-                <div className="xp-labels">
-                  <span>XP</span>
-                  <span>640 / 1000</span>
-                </div>
-                <div className="xp-bar">
-                  <div className="xp-fill"></div>
-                </div>
-              </div>
-              <div className="stat-grid">
-                <div className="stat-box">
-                  <div className="v">10🔥</div>
-                  <div className="l">Day streak</div>
-                </div>
-                <div className="stat-box">
-                  <div className="v">10</div>
-                  <div className="l">Entries</div>
-                </div>
-              </div>
-              <button className="auth-btn signin" id="authBtn">
-                <i className="fa-solid fa-arrow-right-from-bracket"></i>
-                <span id="authBtnText">Log out</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* HERO / TOP OF TRAIL */}
       <div className="eyebrow-wrap" id="eyebrow">
         <p className="eyebrow">Chapter continues</p>
@@ -150,21 +71,10 @@ export default function WaypointPage() {
         </div>
       </main>
 
-      {/* FAB */}
-      <div className="fab-wrap">
-        <span className="fab-label">Record a quest</span>
-        <button className="fab" id="fabBtn" title="New journal entry" aria-label="Record a new quest">
-          <i className="fa-solid fa-plus"></i>
-        </button>
-      </div>
 
-      {/* MODAL */}
+      {/* MODAL — used for reading past journal entries */}
       <div className="modal-overlay" id="modalOverlay">
         <div className="modal-card" id="modalCard"></div>
-      </div>
-      <div className="toast" id="toast">
-        <i className="fa-solid fa-circle-check"></i>
-        <span id="toastText">Saved</span>
       </div>
 
     </>
