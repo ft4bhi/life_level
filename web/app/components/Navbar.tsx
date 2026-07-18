@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useAudio } from "./AudioContext";
+import { Play, Pause } from "lucide-react";
 
 export default function Navbar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -13,13 +15,14 @@ export default function Navbar() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
+  const { isPlaying, togglePlay } = useAudio();
   const settingsWrapRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (settingsWrapRef.current && !settingsWrapRef.current.contains(event.target as Node)) {
+      if (settingsWrapRef.current && !settingsWrap.current.contains(event.target as Node)) {
         setSettingsOpen(false);
       }
     }
@@ -78,6 +81,13 @@ export default function Navbar() {
       </div>
       
       <div className="nav-right">
+        <button
+          className="icon-btn"
+          title={isPlaying ? "Pause music" : "Play music"}
+          onClick={togglePlay}
+        >
+          {isPlaying ? <Pause /> : <Play />}
+        </button>
         {isLoggedIn ? (
           <>
             <div className="settings-wrap" ref={settingsWrapRef}>
