@@ -17,12 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from ninja import NinjaAPI
+from users.api import router as users_router
+from journals.api import router as journals_router
 
 api = NinjaAPI()
+
+api.add_router("/users", users_router)
+api.add_router("/journals", journals_router)
 
 @api.get("/hello")
 def hello(request):
     return {"message": "Hello from the Django backend!"}
+
+@api.get("/health")
+def health_check(request):
+    return {"status": "ok"}
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -1,8 +1,8 @@
 from ninja import Router
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.http import HttpRequest
 from rest_framework_simplejwt.tokens import RefreshToken
-from .schemas import RegisterIn, TokenOut, UserOut
+from .schemas import RegisterIn, TokenOut, UserOut, LoginIn
 
 router = Router()
 User = get_user_model()
@@ -26,6 +26,17 @@ def register(request: HttpRequest, payload: RegisterIn):
         username=payload.username,
         password=payload.password,
     )
+    tokens = get_tokens_for_user(user)
+    return tokens
+
+
+@router.post("/login", response=TokenOut)
+def login(request: HttpRequest, payload: LoginIn):
+    """Authenticate a user and return JWT tokens."""
+    user = authenticate(username=payload.username, password=payload.password)
+    if not user:
+        from ninja.errors import HttpError
+        raise HttpError(401, "Invalid credentials")
     tokens = get_tokens_for_user(user)
     return tokens
 

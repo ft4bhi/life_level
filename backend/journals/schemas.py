@@ -19,6 +19,9 @@ class JournalOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    class Config:
+        from_attributes = True
+
 
 class JournalUpdateIn(BaseModel):
     title: Optional[str] = None

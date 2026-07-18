@@ -6,6 +6,11 @@ class RegisterIn(BaseModel):
     password: str
 
 
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
 class TokenOut(BaseModel):
     access: str
     refresh: str

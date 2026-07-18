@@ -25,8 +25,8 @@ export default function JournalDetailPage() {
     const fetchJournal = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        // Replace with actual Django endpoint (e.g., http://localhost:8000/api/journals/${id}/)
-        const res = await fetch(`http://localhost:8000/api/journals/${id}/`, {
+        // Replace with actual Django endpoint (e.g., http://localhost:8000/api/journals/${id})
+        const res = await fetch(`http://localhost:8000/api/journals/${id}`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -70,7 +70,7 @@ export default function JournalDetailPage() {
     try {
       const token = localStorage.getItem("access_token");
       // Replace with actual Django endpoint setup
-      const res = await fetch(`http://localhost:8000/api/journals/${id}/`, {
+      const res = await fetch(`http://localhost:8000/api/journals/${id}`, {
         method: "PUT", // or PATCH
         headers: {
           "Content-Type": "application/json",

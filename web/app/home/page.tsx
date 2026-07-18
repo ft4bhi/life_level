@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useWaypointGsap } from "./useWaypointGsap";
 import "./waypoint.css";
 
@@ -8,8 +9,97 @@ import "./waypoint.css";
 // single Next.js (app router) client component. All original markup,
 // styling and behavior are preserved as closely as possible.
 
+export interface JournalNode {
+  id: number;
+  title: string;
+  excerpt: string;
+  body: string;
+  mood: string;
+  date: string;
+  x: number;
+  zone: string;
+  today?: boolean;
+}
+
 export default function WaypointPage() {
-  useWaypointGsap();
+  const [nodes, setNodes] = useState<JournalNode[]>([]);
+  const [loading, setLoading] = useState(true);
+  useWaypointGsap(nodes);
+
+  useEffect(() => {
+    const fetchJournals = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        // Handle not logged in case
+        setLoading(false);
+        return;
+      }
+
+      // Load from cache first
+      const cachedNodes = localStorage.getItem("journal_cache");
+      if (cachedNodes) {
+        setNodes(JSON.parse(cachedNodes));
+        setLoading(false);
+      }
+
+      try {
+        const res = await fetch("http://localhost:8000/api/journals/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch journals");
+        }
+
+        const data = await res.json();
+
+        const formattedNodes: JournalNode[] = data.map((journal: any, index: number) => ({
+          id: journal.id,
+          title: journal.title,
+          excerpt: journal.excerpt,
+          body: journal.content,
+          mood: journal.mood,
+          date: new Date(journal.created_at).toLocaleDateString("en-US", {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+          x: index % 2 === 0 ? 28 : 70, // Alternate x position
+          zone: ["meadow", "woods", "dunes", "frost", "hollow"][index % 5], // Cycle through zones
+        }));
+
+        // Add "today" node
+        formattedNodes.unshift({
+          id: 0,
+          today: true,
+          x: 50,
+          zone: "meadow",
+          mood: "+",
+          title: "Today",
+          date: "Not written yet",
+          excerpt: "Your next waypoint is waiting.",
+          body: "",
+        });
+
+        // Compare with cache and update if necessary
+        if (JSON.stringify(formattedNodes) !== cachedNodes) {
+            setNodes(formattedNodes);
+            localStorage.setItem("journal_cache", JSON.stringify(formattedNodes));
+        }
+
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (cachedNodes === null) {
+            setLoading(false);
+        }
+      }
+    };
+
+    fetchJournals();
+  }, []);
 
   return (
     <>

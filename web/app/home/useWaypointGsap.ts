@@ -1,11 +1,14 @@
 import { useEffect, useRef } from "react";
-import { ZONES, NODES } from "./waypointData";
+import { ZONES } from "./waypointData";
+import { JournalNode } from "./page";
+import { useRouter } from "next/navigation";
 
-export function useWaypointGsap() {
+export function useWaypointGsap(nodes: JournalNode[]) {
   const initialized = useRef(false);
+  const router = useRouter();
 
   useEffect(() => {
-    if (initialized.current) return;
+    if (initialized.current || !nodes.length) return;
     initialized.current = true;
 
     let cleanupFns: Array<() => void> = [];
@@ -43,12 +46,12 @@ export function useWaypointGsap() {
 
         function buildLayout() {
           var SPACING = spacing();
-          var totalHeight = TOP_PAD + (NODES.length - 1) * SPACING + BOTTOM_PAD;
+          var totalHeight = TOP_PAD + (nodes.length - 1) * SPACING + BOTTOM_PAD;
           levelMap.style.minHeight = totalHeight + "px";
-          points = NODES.map(function (n, i) {
+          points = nodes.map(function (n, i) {
             return { x: n.x, y: TOP_PAD + i * SPACING };
           });
-          nodesContainer.innerHTML = NODES.map(function (n, i) {
+          nodesContainer.innerHTML = nodes.map(function (n, i) {
             var p = points[i];
             var alignClass = n.x < 40 ? "align-r" : n.x > 60 ? "align-l" : "";
             if (n.today) {
@@ -63,7 +66,7 @@ export function useWaypointGsap() {
             return (
               '<div class="level-node ' + alignClass + '" data-idx="' + i + '" style="left:' + p.x + "%; top:" + p.y + 'px;">' +
               '<button class="node-hit" data-open="' + i + '">' +
-              '<div class="node-badge zone-' + n.zone + '"><span>' + n.mood + '</span><span class="lvl-num">LV ' + (NODES.length - i) + "</span></div>" +
+              '<div class="node-badge zone-' + n.zone + '"><span>' + n.mood + '</span><span class="lvl-num">LV ' + (nodes.length - i) + "</span></div>" +
               '<div class="node-title">' + n.title + "</div>" +
               '<div class="node-date">' + n.date + "</div>" +
               '<div class="node-excerpt">' + n.excerpt + "</div>" +
@@ -223,16 +226,51 @@ export function useWaypointGsap() {
         var modalCard = document.getElementById("modalCard")!;
 
         function openReadModal(idx: number) {
-          var n = NODES[idx];
+          var n = nodes[idx];
           modalCard.innerHTML =
             '<div class="modal-top">' +
             "<div><h3>" + n.title + '</h3><div class="modal-meta">' + n.date + "  ·  " + n.mood + "</div></div>" +
+            '<div>' +
+            '<button class="modal-edit" id="editBtn"><i class="fa-solid fa-pencil"></i></button>' +
+            '<button class="modal-delete" id="deleteBtn"><i class="fa-solid fa-trash"></i></button>' +
             '<button class="modal-close" id="closeModal"><i class="fa-solid fa-xmark"></i></button>' +
+            "</div>" +
             "</div>" +
             '<p class="modal-body-text">' + n.body + "</p>";
           overlay.classList.add("open");
           document.getElementById("closeModal")!.addEventListener("click", closeOverlay);
+          document.getElementById("editBtn")!.addEventListener("click", () => {
+            router.push(`/journal/${n.id}`);
+          });
+          document.getElementById("deleteBtn")!.addEventListener("click", () => handleDelete(n.id));
           document.body.style.overflow = "hidden";
+        }
+
+        async function handleDelete(journalId: number) {
+          const token = localStorage.getItem("access_token");
+          if (!token) return;
+
+          if (confirm("Are you sure you want to delete this journal entry?")) {
+            try {
+              const res = await fetch(`http://localhost:8000/api/journals/${journalId}`, {
+                method: 'DELETE',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (!res.ok) {
+                throw new Error("Failed to delete journal");
+              }
+              
+              closeOverlay();
+              window.location.reload(); // Easiest way to refetch and rerender
+
+            } catch (error) {
+              console.error(error);
+              alert("Failed to delete journal entry.");
+            }
+          }
         }
 
         function closeOverlay() {
@@ -293,5 +331,5 @@ export function useWaypointGsap() {
       cleanupFns.forEach((fn) => fn());
       cleanupFns = [];
     };
-  }, []);
+  }, [nodes, router]);
 }
