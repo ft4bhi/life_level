@@ -1,9 +1,14 @@
-from ninja import Router
+from ninja import Router, Schema
 from django.contrib.auth import get_user_model, authenticate
 from django.http import HttpRequest
 from rest_framework_simplejwt.tokens import RefreshToken
 from core.auth import FirebaseAuth
 from .schemas import RegisterIn, TokenOut, UserOut, LoginIn
+
+
+class ProfileUpdateIn(Schema):
+    bio: str | None = None
+    first_name: str | None = None
 
 router = Router()
 User = get_user_model()
@@ -49,7 +54,26 @@ def me(request: HttpRequest):
     user = request.auth
     return {
         "id": user.id,
-        "username": user.username,
+        "username": user.first_name or user.username,
+        "email": user.email or "",
+        "bio": user.bio,
+        "avatar_url": user.avatar_url,
+    }
+
+
+
+@router.put("/me", response=UserOut, auth=auth)
+def update_me(request: HttpRequest, payload: ProfileUpdateIn):
+    """Update authenticated user's profile info."""
+    user = request.auth
+    if payload.bio is not None:
+        user.bio = payload.bio
+    if payload.first_name is not None:
+        user.first_name = payload.first_name
+    user.save()
+    return {
+        "id": user.id,
+        "username": user.first_name or user.username,
         "email": user.email or "",
         "bio": user.bio,
         "avatar_url": user.avatar_url,

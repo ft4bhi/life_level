@@ -35,15 +35,21 @@ export function useWaypointGsap(nodes: JournalNode[]) {
         }
         var TOP_PAD = 110,
           BOTTOM_PAD = 160;
-        var nodesContainer = document.getElementById("nodesContainer")!;
-        var levelMap = document.getElementById("levelMap")!;
-        var trailBg = document.getElementById("trailBg")!;
+        var nodesContainer = document.getElementById("nodesContainer");
+        var levelMap = document.getElementById("levelMap");
+        var trailBg = document.getElementById("trailBg");
         var trailFg = document.getElementById("trailFg") as unknown as SVGPathElement;
-        var wayfinder = document.getElementById("wayfinder")!;
-        var originMarker = document.getElementById("originMarker")!;
+        var wayfinder = document.getElementById("wayfinder");
+        var originMarker = document.getElementById("originMarker");
+
+        if (!nodesContainer || !levelMap || !trailBg || !trailFg || !wayfinder || !originMarker) {
+          return;
+        }
+
         var points: { x: number; y: number }[] = [];
 
         function buildLayout() {
+          if (!levelMap || !nodesContainer || !originMarker || !trailBg || !trailFg) return 0;
           var SPACING = spacing();
           var totalHeight = TOP_PAD + (nodes.length - 1) * SPACING + BOTTOM_PAD;
           levelMap.style.minHeight = totalHeight + "px";
@@ -76,10 +82,12 @@ export function useWaypointGsap(nodes: JournalNode[]) {
           var d = catmullRomPath(points);
           trailBg.setAttribute("d", d);
           trailFg.setAttribute("d", d);
-          var svg = document.getElementById("trailSvg")!;
-          svg.setAttribute("viewBox", "0 0 100 " + totalHeight);
-          svg.setAttribute("preserveAspectRatio", "none");
-          (svg as unknown as HTMLElement).style.height = totalHeight + "px";
+          var svg = document.getElementById("trailSvg");
+          if (svg) {
+            svg.setAttribute("viewBox", "0 0 100 " + totalHeight);
+            svg.setAttribute("preserveAspectRatio", "none");
+            (svg as unknown as HTMLElement).style.height = totalHeight + "px";
+          }
           return totalHeight;
         }
 
@@ -105,24 +113,27 @@ export function useWaypointGsap(nodes: JournalNode[]) {
         var totalHeight = buildLayout();
 
         /* ============= SCROLL-LINKED ANIMATION ============= */
-        var layers: Record<string, HTMLElement> = {
-          meadow: document.getElementById("layer-meadow")!,
-          woods: document.getElementById("layer-woods")!,
-          dunes: document.getElementById("layer-dunes")!,
-          frost: document.getElementById("layer-frost")!,
-          hollow: document.getElementById("layer-hollow")!,
+        var layers: Record<string, HTMLElement | null> = {
+          meadow: document.getElementById("layer-meadow"),
+          woods: document.getElementById("layer-woods"),
+          dunes: document.getElementById("layer-dunes"),
+          frost: document.getElementById("layer-frost"),
+          hollow: document.getElementById("layer-hollow"),
         };
-        var zonePill = document.getElementById("zonePill")!;
-        var zoneText = document.getElementById("zoneText")!;
-        var pathLen = trailFg.getTotalLength();
-        (trailFg.style as any).strokeDasharray = pathLen;
-        (trailFg.style as any).strokeDashoffset = pathLen;
+        var zonePill = document.getElementById("zonePill");
+        var zoneText = document.getElementById("zoneText");
+        var pathLen = trailFg ? trailFg.getTotalLength() : 0;
+        if (trailFg) {
+          (trailFg.style as any).strokeDasharray = pathLen;
+          (trailFg.style as any).strokeDashoffset = pathLen;
+        }
 
         function clamp01(v: number) {
           return Math.max(0, Math.min(1, v));
         }
 
         function onScrollProgress(progress: number) {
+          if (!trailFg || !wayfinder || !zonePill || !zoneText) return;
           (trailFg.style as any).strokeDashoffset = pathLen * (1 - progress);
           var pt = trailFg.getPointAtLength(pathLen * progress);
           (wayfinder.style as any).left = pt.x + "%";
@@ -132,13 +143,15 @@ export function useWaypointGsap(nodes: JournalNode[]) {
           ZONES.forEach(function (z) {
             var dist = Math.abs(progress - z.center);
             var op = clamp01(1 - dist / 0.26);
-            layers[z.key].style.opacity = String(op);
+            if (layers[z.key]) {
+              layers[z.key]!.style.opacity = String(op);
+            }
             if (op > bestOpacity) {
               bestOpacity = op;
               bestZone = z;
             }
           });
-          if (bestZone) {
+          if (bestZone && zoneText) {
             zoneText.textContent = bestZone.icon + "  " + bestZone.label;
           }
           zonePill.classList.toggle("show", progress > 0.02 && progress < 0.985);
@@ -170,16 +183,18 @@ export function useWaypointGsap(nodes: JournalNode[]) {
             })
           );
         });
-        var originTrigger = ScrollTrigger.create({
-          trigger: originMarker,
-          start: "top 90%",
-          onEnter: function () {
-            originMarker.classList.add("is-visible");
-          },
-          onLeaveBack: function () {
-            originMarker.classList.remove("is-visible");
-          },
-        });
+        var originTrigger = originMarker
+          ? ScrollTrigger.create({
+              trigger: originMarker,
+              start: "top 90%",
+              onEnter: function () {
+                originMarker?.classList.add("is-visible");
+              },
+              onLeaveBack: function () {
+                originMarker?.classList.remove("is-visible");
+              },
+            })
+          : null;
 
         /* ============= PARTICLES ============= */
         var particleColors: Record<string, string> = {
@@ -192,6 +207,7 @@ export function useWaypointGsap(nodes: JournalNode[]) {
         if (!reduceMotion) {
           Object.keys(layers).forEach(function (key) {
             var layer = layers[key];
+            if (!layer) return;
             var count = 16;
             for (var i = 0; i < count; i++) {
               var p = document.createElement("div");
@@ -221,10 +237,11 @@ export function useWaypointGsap(nodes: JournalNode[]) {
         }
 
         /* ============= MODAL (read-only for past nodes) ============= */
-        var overlay = document.getElementById("modalOverlay")!;
-        var modalCard = document.getElementById("modalCard")!;
+        var overlay = document.getElementById("modalOverlay");
+        var modalCard = document.getElementById("modalCard");
 
         function openReadModal(idx: number) {
+          if (!modalCard || !overlay) return;
           var n = nodes[idx];
           modalCard.innerHTML =
             '<div class="modal-top">' +
@@ -237,11 +254,11 @@ export function useWaypointGsap(nodes: JournalNode[]) {
             "</div>" +
             '<p class="modal-body-text">' + n.body + "</p>";
           overlay.classList.add("open");
-          document.getElementById("closeModal")!.addEventListener("click", closeOverlay);
-          document.getElementById("editBtn")!.addEventListener("click", () => {
+          document.getElementById("closeModal")?.addEventListener("click", closeOverlay);
+          document.getElementById("editBtn")?.addEventListener("click", () => {
             router.push(`/journal/${n.id}`);
           });
-          document.getElementById("deleteBtn")!.addEventListener("click", () => handleDelete(n.id));
+          document.getElementById("deleteBtn")?.addEventListener("click", () => handleDelete(n.id));
           document.body.style.overflow = "hidden";
         }
 
@@ -273,7 +290,7 @@ export function useWaypointGsap(nodes: JournalNode[]) {
         }
 
         function closeOverlay() {
-          overlay.classList.remove("open");
+          if (overlay) overlay.classList.remove("open");
           document.body.style.overflow = "";
         }
         function onOverlayClick(e: MouseEvent) {
@@ -282,7 +299,7 @@ export function useWaypointGsap(nodes: JournalNode[]) {
         function onDocKeydown(e: KeyboardEvent) {
           if (e.key === "Escape") closeOverlay();
         }
-        overlay.addEventListener("click", onOverlayClick);
+        if (overlay) overlay.addEventListener("click", onOverlayClick);
         document.addEventListener("keydown", onDocKeydown);
 
         function onNodesContainerClick(e: MouseEvent) {
@@ -295,9 +312,7 @@ export function useWaypointGsap(nodes: JournalNode[]) {
             openReadModal(parseInt(val, 10));
           }
         }
-        nodesContainer.addEventListener("click", onNodesContainerClick);
-
-
+        if (nodesContainer) nodesContainer.addEventListener("click", onNodesContainerClick);
 
         /* ============= RESIZE ============= */
         var resizeTimer: any;
@@ -305,24 +320,26 @@ export function useWaypointGsap(nodes: JournalNode[]) {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(function () {
             buildLayout();
-            pathLen = trailFg.getTotalLength();
-            (trailFg.style as any).strokeDasharray = pathLen;
+            if (trailFg) {
+              pathLen = trailFg.getTotalLength();
+              (trailFg.style as any).strokeDasharray = pathLen;
+            }
             ScrollTrigger.refresh();
           }, 200);
         }
         window.addEventListener("resize", onResize);
 
         cleanupFns.push(function () {
-          overlay.removeEventListener("click", onOverlayClick);
+          if (overlay) overlay.removeEventListener("click", onOverlayClick);
           document.removeEventListener("keydown", onDocKeydown);
-          nodesContainer.removeEventListener("click", onNodesContainerClick);
+          if (nodesContainer) nodesContainer.removeEventListener("click", onNodesContainerClick);
           window.removeEventListener("resize", onResize);
           mainTrigger.kill();
-          originTrigger.kill();
+          if (originTrigger) originTrigger.kill();
           nodeTriggers.forEach(function (t) {
             t.kill();
           });
-        });
+        });;
       })();
     })();
 
