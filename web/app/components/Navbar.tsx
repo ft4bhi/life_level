@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAudio } from "./AudioContext";
 import { Play, Pause } from "lucide-react";
+import { auth } from "../lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 export default function Navbar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -21,8 +23,15 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (settingsWrapRef.current && !settingsWrap.current.contains(event.target as Node)) {
+      if (settingsWrapRef.current && !settingsWrapRef.current.contains(event.target as Node)) {
         setSettingsOpen(false);
       }
     }
@@ -36,9 +45,13 @@ export default function Navbar() {
     }
   };
 
-  const handleAuthToggle = () => {
-    setIsLoggedIn(!isLoggedIn);
-    // Real auth would happen here
+  const handleAuthToggle = async () => {
+    try {
+      await signOut(auth);
+      router.push("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   // Skip rendering navbar if on a landing or auth page, optional. We will render it globally for now as requested.

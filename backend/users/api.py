@@ -2,10 +2,12 @@ from ninja import Router
 from django.contrib.auth import get_user_model, authenticate
 from django.http import HttpRequest
 from rest_framework_simplejwt.tokens import RefreshToken
+from core.auth import FirebaseAuth
 from .schemas import RegisterIn, TokenOut, UserOut, LoginIn
 
 router = Router()
 User = get_user_model()
+auth = FirebaseAuth()
 
 
 def get_tokens_for_user(user) -> dict:
@@ -41,11 +43,9 @@ def login(request: HttpRequest, payload: LoginIn):
     return tokens
 
 
-@router.get("/me", response=UserOut)
+@router.get("/me", response=UserOut, auth=auth)
 def me(request: HttpRequest):
     """Return the currently authenticated user's info."""
-    from core.auth import JWTAuth
-    # Auth is handled at the API level via Ninja's auth param
     user = request.auth
     return {
         "id": user.id,

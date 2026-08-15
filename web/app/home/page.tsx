@@ -30,7 +30,18 @@ export default function WaypointPage() {
     const fetchJournals = async () => {
       const token = localStorage.getItem("access_token");
       if (!token) {
-        // Handle not logged in case
+        // Fallback to default Today node if no token
+        setNodes([{
+          id: 0,
+          today: true,
+          x: 50,
+          zone: "meadow",
+          mood: "+",
+          title: "Today",
+          date: "Not written yet",
+          excerpt: "Your next waypoint is waiting.",
+          body: "",
+        }]);
         setLoading(false);
         return;
       }
@@ -38,7 +49,9 @@ export default function WaypointPage() {
       // Load from cache first
       const cachedNodes = localStorage.getItem("journal_cache");
       if (cachedNodes) {
-        setNodes(JSON.parse(cachedNodes));
+        try {
+          setNodes(JSON.parse(cachedNodes));
+        } catch (e) {}
         setLoading(false);
       }
 
@@ -49,8 +62,29 @@ export default function WaypointPage() {
           },
         });
 
+        if (res.status === 401) {
+          console.warn("Unauthorized token, removing token");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("journal_cache");
+          setNodes([{
+            id: 0,
+            today: true,
+            x: 50,
+            zone: "meadow",
+            mood: "+",
+            title: "Today",
+            date: "Not written yet",
+            excerpt: "Your next waypoint is waiting.",
+            body: "",
+          }]);
+          setLoading(false);
+          return;
+        }
+
         if (!res.ok) {
-          throw new Error("Failed to fetch journals");
+          console.error("Server error when fetching journals:", res.status);
+          setLoading(false);
+          return;
         }
 
         const data = await res.json();
@@ -85,16 +119,14 @@ export default function WaypointPage() {
 
         // Compare with cache and update if necessary
         if (JSON.stringify(formattedNodes) !== cachedNodes) {
-            setNodes(formattedNodes);
-            localStorage.setItem("journal_cache", JSON.stringify(formattedNodes));
+          setNodes(formattedNodes);
+          localStorage.setItem("journal_cache", JSON.stringify(formattedNodes));
         }
 
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching journals:", error);
       } finally {
-        if (cachedNodes === null) {
-            setLoading(false);
-        }
+        setLoading(false);
       }
     };
 

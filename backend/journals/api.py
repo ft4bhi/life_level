@@ -1,28 +1,13 @@
 from ninja import Router
-from ninja.security import HttpBearer
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from core.auth import FirebaseAuth
 from .models import Journal
 from .schemas import JournalIn, JournalOut, JournalUpdateIn
 from typing import List
 
 router = Router()
-
-
-class JWTAuth(HttpBearer):
-    def authenticate(self, request, token: str):
-        jwt_auth = JWTAuthentication()
-        try:
-            validated_token = jwt_auth.get_validated_token(token)
-            user = jwt_auth.get_user(validated_token)
-            return user
-        except (InvalidToken, TokenError):
-            return None
-
-
-auth = JWTAuth()
+auth = FirebaseAuth()
 
 
 @router.get("/", response=List[JournalOut], auth=auth)

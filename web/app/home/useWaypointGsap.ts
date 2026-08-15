@@ -8,8 +8,7 @@ export function useWaypointGsap(nodes: JournalNode[]) {
   const router = useRouter();
 
   useEffect(() => {
-    if (initialized.current || !nodes.length) return;
-    initialized.current = true;
+    if (!nodes.length) return;
 
     let cleanupFns: Array<() => void> = [];
 

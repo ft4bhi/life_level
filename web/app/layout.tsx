@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "./components/AudioContext";
+import AuthProvider from "./components/AuthProvider";
 import Navbar from "./components/Navbar";
 
 const DMSans = DM_Sans({
@@ -27,8 +28,10 @@ export default function RootLayout({
           For this example, we assume a file named `background-music.mp3` exists.
         */}
         <AudioProvider audioSrc="/music/sigmamusicart-epic-background-music-368177.mp3">
-          <Navbar />
-          {children}
+          <AuthProvider>
+            <Navbar />
+            {children}
+          </AuthProvider>
         </AudioProvider>
       </body>
     </html>
